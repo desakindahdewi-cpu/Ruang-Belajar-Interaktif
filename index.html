@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Belajar - Virtual Study Space</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        study: {
+                            50: '#fdf8f6',
+                            100: '#f2e8e5',
+                            200: '#eaddd7',
+                            300: '#e0cec7',
+                            600: '#8c6d62',
+                            700: '#705348',
+                            800: '#594138',
+                            900: '#44322b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-study-50 dark:bg-zinc-900 text-stone-800 dark:text-stone-100 min-h-full flex flex-col transition-colors duration-300">
+
+    <!-- Header Navigation -->
+    <header class="bg-white/80 dark:bg-zinc-800/80 backdrop-blur border-b border-stone-200 dark:border-zinc-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-study-700 text-white p-2 rounded-xl shadow-md">
+                    <i class="fa-solid fa-book-open-reader text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-study-800 dark:text-study-100">RuangBelajar</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="current-time" class="text-sm font-medium text-stone-500 dark:text-stone-400 hidden sm:inline"></span>
+                <button id="theme-toggle" class="p-2 rounded-lg bg-stone-100 dark:bg-zinc-700 hover:bg-stone-200 dark:hover:bg-zinc-600 transition-colors" title="Ubah Mode">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline text-yellow-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Pomodoro Timer & Ambient Sounds -->
+        <div class="space-y-6 flex flex-col">
+            <!-- Pomodoro Card -->
+            <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-stone-200 dark:border-zinc-700 p-6 flex flex-col items-center">
+                <div class="flex space-x-2 bg-stone-100 dark:bg-zinc-700 p-1 rounded-xl mb-6 w-full max-w-xs">
+                    <button onclick="setMode('work')" id="btn-work" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-study-700 text-white transition-all">Fokus (25m)</button>
+                    <button onclick="setMode('shortBreak')" id="btn-shortBreak" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-stone-600 dark:text-stone-300 hover:text-stone-900 transition-all">Istirahat (5m)</button>
+                    <button onclick="setMode('longBreak')" id="btn-longBreak" class="flex-1 py-1.5 text-xs font-semibold rounded-lg text-stone-600 dark:text-stone-300 hover:text-stone-900 transition-all">Panjang (15m)</button>
+                </div>
+
+                <div class="relative flex items-center justify-center my-4">
+                    <div class="text-6xl sm:text-7xl font-extrabold tracking-wider font-mono text-study-800 dark:text-study-100" id="timer-display">25:00</div>
+                </div>
+
+                <div class="flex space-x-3 mt-4 w-full">
+                    <button id="timer-toggle-btn" onclick="toggleTimer()" class="flex-1 bg-study-700 hover:bg-study-800 text-white font-medium py-3 px-6 rounded-xl shadow transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-play" id="timer-icon"></i>
+                        <span id="timer-btn-text">Mulai Fokus</span>
+                    </button>
+                    <button onclick="resetTimer()" class="bg-stone-100 dark:bg-zinc-700 hover:bg-stone-200 dark:hover:bg-zinc-600 text-stone-700 dark:text-stone-200 p-3 rounded-xl transition-colors" title="Reset Timer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ambient Sound Generator Card -->
+            <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-stone-200 dark:border-zinc-700 p-6">
+                <h2 class="text-base font-semibold mb-4 flex items-center space-x-2 text-stone-700 dark:text-stone-200">
+                    <i class="fa-solid fa-headphones text-study-700"></i>
+                    <span>Suasana Belajar (Ambient)</span>
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium text-stone-600 dark:text-stone-400">
+                            <span>Suara Hujan (Rain)</span>
+                            <span id="rain-vol-val">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="adjustVolume('rain', this.value)" class="w-full accent-study-700 cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium text-stone-600 dark:text-stone-400">
+                            <span>Derau Coklat/Kafe (Brown Noise)</span>
+                            <span id="brown-vol-val">0%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="0" oninput="adjustVolume('brown', this.value)" class="w-full accent-study-700 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Column: To-Do List / Tugas Harian -->
+        <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-stone-200 dark:border-zinc-700 p-6 flex flex-col">
+            <h2 class="text-base font-semibold mb-4 flex items-center space-x-2 text-stone-700 dark:text-stone-200">
+                <i class="fa-solid fa-list-check text-study-700"></i>
+                <span>Daftar Tugas Belajar</span>
+            </h2>
+            
+            <form id="todo-form" onsubmit="addTask(event)" class="flex gap-2 mb-4">
+                <input type="text" id="todo-input" placeholder="Tambahkan tugas baru..." required
+                    class="flex-1 bg-stone-50 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-study-700">
+                <button type="submit" class="bg-study-700 hover:bg-study-800 text-white px-4 py-2.5 rounded-xl font-medium transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </form>
+
+            <div class="flex-grow overflow-y-auto max-h-[350px] space-y-2 pr-1" id="todo-list">
+                <!-- Task items injected via JS -->
+            </div>
+            <div class="mt-4 pt-3 border-t border-stone-100 dark:border-zinc-700 flex justify-between text-xs text-stone-500">
+                <span id="task-counter">0 tugas selesai</span>
+                <button onclick="clearCompletedTasks()" class="hover:text-study-700 transition-colors">Hapus Selesai</button>
+            </div>
+        </div>
+
+        <!-- Right Column: Quick Notes / Catatan Kilat -->
+        <div class="bg-white dark:bg-zinc-800 rounded-2xl shadow-sm border border-stone-200 dark:border-zinc-700 p-6 flex flex-col">
+            <h2 class="text-base font-semibold mb-4 flex items-center space-x-2 text-stone-700 dark:text-stone-200">
+                <i class="fa-solid fa-note-sticky text-study-700"></i>
+                <span>Catatan Kilat (Scratchpad)</span>
+            </h2>
+            <textarea id="quick-notes" oninput="saveNotes()" placeholder="Tulis rangkuman atau rumus penting di sini..."
+                class="flex-grow w-full bg-stone-50 dark:bg-zinc-900 border border-stone-200 dark:border-zinc-700 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-study-700 resize-none min-h-[220px] lg:min-h-[300px]"></textarea>
+            <div class="mt-3 flex justify-between items-center text-xs text-stone-400">
+                <span id="notes-status">Tersimpan otomatis</span>
+                <button onclick="clearNotes()" class="hover:text-red-500 transition-colors">Bersihkan Catatan</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-6 text-center text-xs text-stone-400 border-t border-stone-200 dark:border-zinc-800">
+        <p>Ruang Belajar Interaktif &bull; Ciptakan suasana fokus dan produktifmu.</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Theme Toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Pomodoro Timer Logic
+        let timerModes = {
+            work: { time: 25 * 60, name: 'Fokus' },
+            shortBreak: { time: 5 * 60, name: 'Istirahat' },
+            longBreak: { time: 15 * 60, name: 'Panjang' }
+        };
+        let currentMode = 'work';
+        let timeLeft = timerModes[currentMode].time;
+        let timerInterval = null;
+        let isRunning = false;
+
+        function setMode(mode) {
+            if (isRunning) pauseTimer();
+            currentMode = mode;
+            timeLeft = timerModes[mode].time;
+            
+            ['work', 'shortBreak', 'longBreak'].forEach(m => {
+                const btn = document.getElementById(`btn-${m}`);
+                if (m === mode) {
+                    btn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg bg-study-700 text-white transition-all";
+                } else {
+                    btn.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg text-stone-600 dark:text-stone-300 hover:text-stone-900 transition-all";
+                }
+            });
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.title = `(${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}) Ruang Belajar`;
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            isRunning = true;
+            document.getElementById('timer-icon').className = "fa-solid fa-pause";
+            document.getElementById('timer-btn-text').innerText = "Jeda";
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    pauseTimer();
+                    alert('Waktu sesi selesai! Waktunya beristirahat atau kembali fokus.');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-icon').className = "fa-solid fa-play";
+            document.getElementById('timer-btn-text').innerText = "Lanjutkan";
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = timerModes[currentMode].time;
+            updateTimerDisplay();
+            document.getElementById('timer-btn-text').innerText = "Mulai Fokus";
+        }
+
+        // To-Do List Logic
+        let tasks = JSON.parse(localStorage.getItem('study_tasks')) || [
+            { id: 1, text: 'Membaca Bab 3 Matematika', completed: false },
+            { id: 2, text: 'Merangkum catatan sejarah', completed: true }
+        ];
+
+        function renderTasks() {
+            const listEl = document.getElementById('todo-list');
+            listEl.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-stone-400 text-center py-4">Belum ada tugas. Tambahkan sekarang!</p>`;
+            }
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-2.5 rounded-xl bg-stone-50 dark:bg-zinc-900/50 border border-stone-100 dark:border-zinc-800 group";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3 overflow-hidden">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleTask(${task.id})"
+                            class="w-4 h-4 accent-study-700 rounded cursor-pointer">
+                        <span class="text-sm truncate ${task.completed ? 'line-through text-stone-400 dark:text-stone-500' : 'text-stone-700 dark:text-stone-200'}">${escapeHtml(task.text)}</span>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-stone-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 px-2">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                listEl.appendChild(item);
+            });
+
+            const completedCount = tasks.filter(t => t.completed).length;
+            document.getElementById('task-counter').innerText = `${completedCount} dari ${tasks.length} tugas selesai`;
+            localStorage.setItem('study_tasks', JSON.stringify(tasks));
+        }
+
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('todo-input');
+            if (!input.value.trim()) return;
+            tasks.push({ id: Date.now(), text: input.value.trim(), completed: false });
+            input.value = '';
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        function clearCompletedTasks() {
+            tasks = tasks.filter(t => !t.completed);
+            renderTasks();
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        renderTasks();
+
+        // Quick Notes Logic
+        const notesInput = document.getElementById('quick-notes');
+        notesInput.value = localStorage.getItem('study_notes') || '';
+
+        function saveNotes() {
+            localStorage.setItem('study_notes', notesInput.value);
+            const status = document.getElementById('notes-status');
+            status.innerText = "Tersimpan otomatis";
+            setTimeout(() => { status.innerText = ""; }, 2000);
+        }
+
+        function clearNotes() {
+            if (confirm("Yakin ingin membersihkan catatan?")) {
+                notesInput.value = '';
+                localStorage.removeItem('study_notes');
+            }
+        }
+
+        // Web Audio API Ambient Generator (Rain & Brown Noise)
+        let audioCtx = null;
+        let rainNode = null, rainGain = null;
+        let brownNode = null, brownGain = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Rain Generator (Filtered White Noise)
+                const bufferSize = 2 * audioCtx.sampleRate;
+                const rainBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = rainBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                rainNode = audioCtx.createBufferSource();
+                rainNode.buffer = rainBuffer;
+                rainNode.loop = true;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 1000;
+
+                rainGain = audioCtx.createGain();
+                rainGain.gain.value = 0;
+
+                rainNode.connect(filter);
+                filter.connect(rainGain);
+                rainGain.connect(audioCtx.destination);
+                rainNode.start(0);
+
+                // Brown Noise Generator
+                const brownBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const brownOutput = brownBuffer.getChannelData(0);
+                let lastOut = 0.0;
+                for (let i = 0; i < bufferSize; i++) {
+                    let white = Math.random() * 2 - 1;
+                    brownOutput[i] = (lastOut + (0.02 * white)) / 1.02;
+                    lastOut = brownOutput[i];
+                    brownOutput[i] *= 3.5; // Gain adjustment
+                }
+                brownNode = audioCtx.createBufferSource();
+                brownNode.buffer = brownBuffer;
+                brownNode.loop = true;
+
+                brownGain = audioCtx.createGain();
+                brownGain.gain.value = 0;
+
+                brownNode.connect(brownGain);
+                brownGain.connect(audioCtx.destination);
+                brownNode.start(0);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function adjustVolume(type, val) {
+            initAudio();
+            const normalizedVol = (val / 100) * 0.3; // Limit max volume for comfort
+            document.getElementById(`${type}-vol-val`).innerText = `${val}%`;
+            
+            if (type === 'rain' && rainGain) {
+                rainGain.gain.setValueAtTime(normalizedVol, audioCtx.currentTime);
+            } else if (type === 'brown' && brownGain) {
+                brownGain.gain.setValueAtTime(normalizedVol, audioCtx.currentTime);
+            }
+        }
+    </script>
+</body>
+</html>
+```eof
+
+***
+
+### Ringkasan Fitur Web Ruang Belajar:
+1. **Pomodoro Timer**: Membantu teknik manajemen waktu belajar dengan mode Fokus (25 menit), Istirahat Pendek (5 menit), dan Istirahat Panjang (15 menit).
+2. **Daftar Tugas (To-Do List)**: Mengelola tugas-tugas harian yang terintegrasi dengan penyimpanan lokal (`localStorage`) agar tidak hilang saat halaman direload.
+3. **Catatan Kilat (Scratchpad)**: Ruang untuk menulis coretan, rumus, atau rangkuman secara instan dengan fitur *auto-save*.
+4. **Generator Suasana (Ambient Sound)**: Fitur suara latar belakang generator suara hujan dan derau coklat (*brown noise*) menggunakan Web Audio API tanpa perlu file audio eksternal.
+5. **Mode Gelap/Terang**: Mendukung kenyamanan mata saat belajar di siang maupun malam hari.
